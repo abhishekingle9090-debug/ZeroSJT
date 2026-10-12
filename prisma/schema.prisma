@@ -22,3 +22,13 @@ model Problem {
   difficulty  String
   createdAt   DateTime @default(now())
 }
+
+model Submission {
+  id         String   @id @default(uuid())
+  code       String
+  languageId Int
+  status     String   @default("PENDING") 
+  problemId  String
+  userId     String
+  createdAt  DateTime @default(now())
+}
