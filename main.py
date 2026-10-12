@@ -6,6 +6,7 @@ import jwt
 from datetime import datetime, timedelta
 import redis.asyncio as redis
 import json
+from typing import Optional
 
 # Security Configuration
 SECRET_KEY = "vit_super_secret_key_change_in_production"
@@ -17,6 +18,32 @@ prisma = Prisma()
 
 # Set up a global variable for Redis
 redis_client = None
+@app.get("/problems")
+async def get_problems(
+    skip: int = 0, 
+    limit: int = 10, 
+    difficulty: Optional[str] = None
+):
+    query_filter = {}
+    if difficulty:
+        query_filter["difficulty"] = difficulty
+
+    # CHANGE db -> prisma
+    problems = await prisma.problem.find_many(
+        skip=skip,
+        take=limit,
+        where=query_filter
+    )
+    
+    # CHANGE db -> prisma
+    total_count = await prisma.problem.count(where=query_filter)
+
+    return {
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "data": problems
+    }
 
 @app.on_event("startup")
 async def startup():
@@ -113,11 +140,35 @@ async def create_problem(problem: ProblemCreate):
     )
     return {"message": "Problem created successfully!", "problem": new_problem}
 
-# --- FRONTEND ROUTE: Get all problems ---
+from typing import Optional
+
 @app.get("/problems")
-async def get_all_problems():
-    problems = await prisma.problem.find_many()
-    return problems
+async def get_problems(
+    skip: int = 0, 
+    limit: int = 10, 
+    difficulty: Optional[str] = None
+):
+    # 1. Build the filter dynamically
+    query_filter = {}
+    if difficulty:
+        query_filter["difficulty"] = difficulty
+
+    # 2. Query the database with pagination and filters
+    problems = await db.problem.find_many(
+        skip=skip,
+        take=limit,
+        where=query_filter
+    )
+    
+    # 3. Get the total count for frontend pagination UI
+    total_count = await db.problem.count(where=query_filter)
+
+    return {
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "data": problems
+    }
 
 # --- FRONTEND ROUTE: Get a specific problem ---
 @app.get("/problems/{problem_id}")
