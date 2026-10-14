@@ -16,30 +16,31 @@ model User {
 }
 
 model Problem {
-  id          Int        @id @default(autoincrement())
+  id          String       @id @default(uuid())
   title       String
   description String
   difficulty  String
-  createdAt   DateTime   @default(now())
-  test_cases  TestCase[]
+  createdAt   DateTime     @default(now())
+  testCases   TestCase[]
+  submissions Submission[]
 }
 
 model Submission {
   id         String   @id @default(uuid())
+  problemId  String
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  userId     String
   code       String
   languageId Int
-  status     String   @default("PENDING") 
-  problemId  String
-  userId     String
+  status     String   @default("Pending")
   createdAt  DateTime @default(now())
 }
 
 model TestCase {
-  id              Int      @id @default(autoincrement())
-  problem_id      Int      
-  input           String
-  expected_output String
-  is_hidden       Boolean  @default(false)
-  
-  problem         Problem  @relation(fields: [problem_id], references: [id])
+  id             String  @id @default(uuid())
+  problemId      String
+  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input          String
+  expectedOutput String
+  isHidden       Boolean @default(false)
 }
